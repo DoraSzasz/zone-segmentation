@@ -203,6 +203,6 @@ def preprocessImage(imgDir):
 
 if __name__ == '__main__':
 
-    preprocessImage('data-test/ProstateX-0227')
+    preprocessImage('data-test/ProstateX-0005')
 
 

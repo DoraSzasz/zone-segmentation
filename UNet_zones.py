@@ -3,7 +3,7 @@ import numpy as np
 import os
 import utils
 import preprocessing
-import evaluation
+#import evaluation
 import SimpleITK as sitk
 from keras import backend as K
 K.set_image_data_format('channels_last')  # TF dimension ordering in this code
@@ -11,8 +11,7 @@ K.set_image_data_format('channels_last')  # TF dimension ordering in this code
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, CSVLogger, ReduceLROnPlateau, EarlyStopping, TensorBoard
 from keras.models import Model
-from keras.layers import concatenate, Input, Conv3D, MaxPooling3D, Conv3DTranspose, Lambda, \
-    BatchNormalization, Dropout
+from keras.layers import concatenate, Input, Conv3D, MaxPooling3D, Conv3DTranspose, Lambda, BatchNormalization, Dropout
 
 smooth = 1.
 
@@ -154,44 +153,6 @@ class anisotopic_UNET:
         return model
 
 
-
-def train_model(epochs, learningRate, imgs, gt_list, val_imgs, val_gt_list, foldNr):
-
-    name = 'UNet_zones_Fold' + str(foldNr) + '_LR_' + str(learningRate)
-
-    # keras callbacks
-    csv_logger = CSVLogger(name+'.csv', append=True, separator=';')
-    model_checkpoint = ModelCheckpoint(name+'.h5', monitor='val_loss', save_best_only=True, verbose=1, mode='min')
-    earlyStopImprovement = EarlyStopping(monitor='val_loss', min_delta=0.001, patience=100, verbose=1, mode='min')
-    LRDecay = ReduceLROnPlateau(monitor='val_loss', factor=0.8, patience=25, verbose=1, mode='min', min_lr=1e-8,
-                                epsilon=0.01)
-    tensorboard = TensorBoard(log_dir='./tensorboard_logs/', write_graph=False, write_grads=False, histogram_freq=0,
-                              batch_size=5,
-                              write_images=False)
-
-    print('-' * 30)
-    print('Creating and compiling model...')
-    print('-' * 30)
-
-    network = anisotopic_UNET()
-    model = network.get_net(learningRate = LR, bn = True, do=True)
-    # plot_model(model, to_file='model.png')
-
-    print('-' * 30)
-    print('Fitting model...')
-    print('-' * 30)
-
-    cb = [csv_logger, model_checkpoint, earlyStopImprovement, LRDecay]
-
-    print('Callbacks: ', cb)
-
-    history = model.fit(imgs, gt_list, batch_size=2, epochs=epochs,
-                        verbose=1, validation_data=[val_imgs, val_gt_list], shuffle=True, callbacks=cb)
-    model.save(name + '_final.h5')
-
-    return history
-
-
 def predict(img_arr, modelName):
 
     network = anisotopic_UNET()
@@ -208,9 +169,9 @@ if __name__ == '__main__':
 
 
     # input directory that contains three orthogonal images (tra, sag, cor), which are needed for preprocessing
-    inputDir = 'data-test/ProstateX-0217'
+    inputDir = '/project2/rcc/tszasz/MRIRC/SC19/prostate_segmentation/zone-segmentation/data-test/ProstateX-0000/'
     arr = preprocessing.preprocessImage(inputDir)
-    pred_arr = predict(arr, modelName = 'model/model.h5')
+    pred_arr = predict(arr, modelName = '/project2/rcc/tszasz/MRIRC/SC19/prostate_segmentation/zone-segmentation/model/model.h5')
     pred_arr = np.asarray(pred_arr)
 
     roi_tra = sitk.ReadImage(os.path.join(inputDir, 'roi_tra.nrrd'))
